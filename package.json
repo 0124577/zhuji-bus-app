@@ -1,0 +1,17 @@
+{
+  "name": "zhuji-bus-app",
+  "version": "1.0.0",
+  "description": "诸暨公交移动版：四Tab（首页/去哪/公告/我的），静态数据+实时API预留，Capacitor打包安卓APP",
+  "private": true,
+  "scripts": {
+    "build:android": "cap sync android && cd android && gradlew.bat assembleDebug",
+    "serve": "python -m http.server 8081 --directory www"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/core": "^6.2.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.1"
+  }
+}

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#ff6b9d">
+  <title>诸暨公交</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ff6b9d'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='white'%3E公交%3C/text%3E%3C/svg%3E">
+  <!-- 腾讯地图代理配置：默认场景，Key 由 WorkBuddy 后端代理持有，前端零 Key -->
+  <script>
+    window._TMapSecurityConfig = {
+      serviceHost: 'http://127.0.0.1:__WB_HTTP_PORT__/_TMapService/_wbt/__WB_TMAP_SECRET__'
+    };
+  </script>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="app">
+    <!-- ============ 顶部通用栏 ============ -->
+    <header class="topbar" id="topbar">
+      <div class="topbar-inner">
+        <div class="brand" id="topTitle">诸暨公交</div>
+        <div class="top-actions" id="topActions"></div>
+      </div>
+    </header>
+
+    <!-- ============ Tab 页面容器 ============ -->
+    <main class="pages">
+      <!-- ---------- Tab1 首页 ---------- -->
+      <section class="page active" id="page-home">
+        <div class="search-wrap">
+          <div class="city-pill" id="cityPill">诸暨市</div>
+          <div class="searchbox" id="homeSearchBox">
+            <svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+            <span>查线路、站点</span>
+          </div>
+        </div>
+
+        <div class="quick-row">
+          <button class="quick-item" id="quickFav">
+            <span class="q-icon q-pink">
+              <svg viewBox="0 0 24 24"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>
+            </span><span>收藏</span>
+          </button>
+          <button class="quick-item" id="quickLocate">
+            <span class="q-icon q-green">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg>
+            </span><span>附近站点</span>
+          </button>
+          <button class="quick-item" id="quickLine">
+            <span class="q-icon q-blue">
+              <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+            </span><span>线路查询</span>
+          </button>
+        </div>
+
+        <div class="seg" id="homeSeg">
+          <button class="seg-btn active" data-seg="near">附近站点</button>
+          <button class="seg-btn" data-seg="lines">线路</button>
+        </div>
+
+        <div id="homeNearPane">
+          <div class="map-card">
+            <div id="map" class="map"></div>
+            <div class="map-fallback" id="mapFallback" hidden>
+              <svg viewBox="0 0 24 24" class="ico"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+              <p id="mapFallbackText">地图暂不可用，已切换为站点列表</p>
+            </div>
+            <div class="loc-bar" id="locBar">
+              <span id="locText">正在获取定位…</span>
+              <button id="reLocate">重新定位</button>
+            </div>
+          </div>
+          <div class="section-title">附近站点<span class="sub" id="nearCount"></span></div>
+          <div id="nearList" class="card-list"></div>
+        </div>
+
+        <div id="homeLinesPane" hidden>
+          <div class="line-search">
+            <svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+            <input id="lineQuery" type="search" placeholder="输入线路名称，如 1路、105" autocomplete="off">
+          </div>
+          <div id="lineResult" class="card-list"></div>
+        </div>
+      </section>
+
+      <!-- ---------- Tab2 去哪 ---------- -->
+      <section class="page" id="page-go">
+        <div class="route-form card">
+          <div class="route-field" id="routeFrom" data-role="from">
+            <span class="dot dot-start"></span>
+            <span class="route-name empty" id="routeFromName">选择起点站</span>
+            <button class="field-search" data-pick="from" aria-label="选择起点">
+              <svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+            </button>
+          </div>
+          <div class="route-divider">
+            <span></span>
+            <button class="swap-btn" id="swapStations" aria-label="交换起终点">
+              <svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg>
+            </button>
+            <span></span>
+          </div>
+          <div class="route-field" id="routeTo" data-role="to">
+            <span class="dot dot-end"></span>
+            <span class="route-name empty" id="routeToName">选择终点站</span>
+            <button class="field-search" data-pick="to" aria-label="选择终点">
+              <svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+            </button>
+          </div>
+          <button class="primary-btn" id="planBtn">查询公交方案</button>
+        </div>
+        <div id="goContent"></div>
+        <div class="section-title" id="historyTitle">查询历史<span class="sub" id="historyCount"></span></div>
+        <div id="historyList" class="card-list"></div>
+      </section>
+
+      <!-- ---------- Tab3 公告 ---------- -->
+      <section class="page" id="page-notice">
+        <div class="notice-bar"><span id="noticeTip">公交改道、线路调整通知</span><button id="readAllBtn">全部已读</button></div>
+        <div id="noticeList" class="notice-list"></div>
+      </section>
+
+      <!-- ---------- Tab4 我的 ---------- -->
+      <section class="page" id="page-mine">
+        <div class="mine-hero card">
+          <span class="mine-avatar">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+          </span>
+          <span class="mine-text"><b>我的收藏</b><small>站点与线路，一目了然</small></span>
+        </div>
+        <div class="seg" id="mineSeg">
+          <button class="seg-btn active" data-seg="stations">收藏站点</button>
+          <button class="seg-btn" data-seg="lines">收藏线路</button>
+        </div>
+        <div id="mineContent" class="card-list"></div>
+      </section>
+    </main>
+
+    <!-- ============ 详情页（覆盖层） ============ -->
+    <section class="detail-page" id="detailPage">
+      <header class="detail-topbar">
+        <button class="back-btn" id="detailBack">
+          <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <span id="detailTitle">详情</span>
+        <button class="detail-fav" id="detailFav" hidden>
+          <svg viewBox="0 0 24 24"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>
+        </button>
+      </header>
+      <div class="detail-body" id="detailBody"></div>
+    </section>
+
+    <!-- ============ 站点选择弹层 ============ -->
+    <section class="picker-mask" id="pickerMask">
+      <div class="picker-sheet">
+        <header class="picker-head">
+          <button id="pickerClose">取消</button>
+          <span id="pickerTitle">选择站点</span>
+          <span style="width:44px"></span>
+        </header>
+        <div class="picker-tabs">
+          <button class="active" data-ptab="search">站点搜索</button>
+          <button data-ptab="tree">线路展开</button>
+        </div>
+        <div class="picker-pane" id="pickerSearchPane">
+          <div class="line-search">
+            <svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+            <input id="pickerQuery" type="search" placeholder="输入站名，如 火车站、西施" autocomplete="off">
+          </div>
+          <div id="pickerSearchResult" class="picker-list"></div>
+        </div>
+        <div class="picker-pane" id="pickerTreePane" hidden>
+          <div class="line-search">
+            <svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+            <input id="pickerLineQuery" type="search" placeholder="输入线路名筛选" autocomplete="off">
+          </div>
+          <div id="pickerTreeResult" class="picker-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 底部 Tab ============ -->
+    <nav class="tabbar" id="tabbar">
+      <button class="tab active" data-tab="home">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg><span>首页</span>
+      </button>
+      <button class="tab" data-tab="go">
+        <svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>去哪</span>
+      </button>
+      <button class="tab" data-tab="notice">
+        <svg viewBox="0 0 24 24"><path d="M4 9v6l3 2v3h3v-2h4v2h3v-3l3-2V9z"/><path d="M4 9l8-6 8 6"/></svg><span>公告</span><i class="tab-dot" id="noticeDot"></i>
+      </button>
+      <button class="tab" data-tab="mine">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>我的</span>
+      </button>
+    </nav>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/route.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

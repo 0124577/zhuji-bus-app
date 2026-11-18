@@ -1,0 +1,11 @@
+{
+  "name": "zhuji-bus-app-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node app-test.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}

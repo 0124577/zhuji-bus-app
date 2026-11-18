@@ -1,0 +1,11 @@
+{
+  "appId": "com.zhuji.bus.app",
+  "appName": "诸暨公交",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

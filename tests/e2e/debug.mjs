@@ -1,0 +1,17 @@
+import puppeteer from 'puppeteer-core';
+const b=await puppeteer.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:'new',args:['--no-sandbox','--disable-dev-shm-usage']});
+const p=await b.newPage(); await p.setViewport({width:390,height:844,isMobile:true});
+p.on('pageerror',e=>console.log('PAGEERR',e.message));
+await p.goto('http://127.0.0.1:8081/',{waitUntil:'networkidle2'});
+await new Promise(r=>setTimeout(r,1500));
+await p.click('.tab[data-tab="go"]');
+await p.click('[data-pick="from"]');
+await new Promise(r=>setTimeout(r,300));
+await p.click('.picker-tabs [data-ptab="tree"]');
+await p.type('#pickerLineQuery','1路');
+await new Promise(r=>setTimeout(r,300));
+console.log('heads',await p.evaluate(()=>[...document.querySelectorAll('#pickerTreeResult .tree-head')].slice(0,5).map(e=>e.dataset.line)));
+await p.click('#pickerTreeResult .tree-head');
+await new Promise(r=>setTimeout(r,300));
+console.log('after',await p.evaluate(()=>({expanded:[...App.picker.expanded],stations:document.querySelectorAll('#pickerTreeResult .tree-station').length,html:document.querySelector('#pickerTreeResult').innerHTML.slice(0,400)})));
+await b.close();
